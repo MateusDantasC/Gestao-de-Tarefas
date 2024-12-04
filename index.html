@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestão de Tarefas</title>
+    <style>
+        /* Estilos Globais */
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f1f8ff; /* Cor suave de fundo */
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #006db3;
+            font-size: 36px;
+            margin-bottom: 20px;
+            letter-spacing: 1px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        /* Formulário */
+        form label {
+            display: block;
+            font-weight: bold;
+            font-size: 16px;
+            color: #444;
+        }
+
+        form input, form select {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        form input:focus, form select:focus {
+            border-color: #006db3; /* Cor azul para o foco */
+            outline: none;
+        }
+
+        form button {
+            width: 100%;
+            padding: 14px;
+            background-color: #007bff; /* Cor de fundo do botão */
+            color: white;
+            font-size: 18px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        form button:hover {
+            background-color: #0056b3; /* Cor mais escura para hover */
+        }
+
+        /* Tabela */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 15px;
+            text-align: left;
+            font-size: 16px;
+        }
+
+        th {
+            background-color: #006db3;
+            color: white;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1f8ff;
+        }
+
+        /* Botões de Ação */
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            color: white;
+            font-size: 14px;
+            transition: opacity 0.3s ease;
+        }
+
+        .edit-btn {
+            background-color: #28a745;
+        }
+
+        .edit-btn:hover {
+            background-color: #218838;
+        }
+
+        .delete-btn {
+            background-color: #dc3545;
+        }
+
+        .delete-btn:hover {
+            background-color: #c82333;
+        }
+
+        /* Mensagem de Nenhuma Tarefa */
+        .no-tasks-message {
+            text-align: center;
+            font-size: 18px;
+            color: #aaa;
+            margin-top: 20px;
+        }
+
+        /* Estilo de animação */
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        .container {
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        #titulo {
+            padding-right: 0px;
+        }
+
+        #descricao {
+            padding-right: 0px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gestão de Tarefas</h1>
+
+        <section id="cadastroSection">
+            <h2>Adicionar Tarefa</h2>
+            <form id="formTarefas">
+                <label for="titulo">Título:</label>
+                <input type="text" id="titulo" required placeholder="Digite o título da tarefa">
+
+                <label for="descricao">Descrição:</label>
+                <input type="text" id="descricao" required placeholder="Descrição detalhada">
+
+                <label for="prioridade">Prioridade:</label>
+                <select id="prioridade" required>
+                    <option value="Alta">Alta</option>
+                    <option value="Média">Média</option>
+                    <option value="Baixa">Baixa</option>
+                </select>
+
+                <button type="submit">Adicionar Tarefa</button>
+            </form>
+        </section>
+
+        <section id="tabelaSection">
+            <h2>Tarefas Cadastradas</h2>
+            <table id="tabelaTarefas">
+                <thead>
+                    <tr>
+                        <th>Título</th>
+                        <th>Descrição</th>
+                        <th>Prioridade</th>
+                        <th>Opções</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Tarefas serão exibidas aqui -->
+                </tbody>
+            </table>
+            <p id="noTasksMessage" class="no-tasks-message" style="display: none;">Nenhuma tarefa cadastrada.</p>
+        </section>
+    </div>
+
+    <script>
+        let tarefas = JSON.parse(localStorage.getItem("tarefas")) || [];
+
+        const form = document.getElementById("formTarefas");
+        const tabela = document.getElementById("tabelaTarefas").querySelector("tbody");
+        const noTasksMessage = document.getElementById("noTasksMessage");
+
+        function renderTabela() {
+            tabela.innerHTML = ""; // Limpa a tabela
+            if (tarefas.length === 0) {
+                noTasksMessage.style.display = "block"; // Exibe a mensagem de nenhuma tarefa
+            } else {
+                noTasksMessage.style.display = "none"; // Esconde a mensagem
+                tarefas.forEach((tarefa, index) => {
+                    const row = document.createElement("tr");
+
+                    row.innerHTML = `
+                        <td>${tarefa.titulo}</td>
+                        <td>${tarefa.descricao}</td>
+                        <td>${tarefa.prioridade}</td>
+                        <td>
+                            <button class="action-btn edit-btn" onclick="editarTarefa(${index})">Editar</button>
+                            <button class="action-btn delete-btn" onclick="excluirTarefa(${index})">Excluir</button>
+                        </td>
+                    `;
+                    tabela.appendChild(row);
+                });
+            }
+        }
+
+        function salvarTarefas() {
+            localStorage.setItem("tarefas", JSON.stringify(tarefas));
+        }
+
+        form.addEventListener("submit", function (event) {
+            event.preventDefault();
+
+            const titulo = document.getElementById("titulo").value.trim();
+            const descricao = document.getElementById("descricao").value.trim();
+            const prioridade = document.getElementById("prioridade").value;
+
+            if (titulo && descricao && prioridade) {
+                tarefas.push({ titulo, descricao, prioridade });
+                salvarTarefas();
+                renderTabela();
+
+                form.reset();
+                alert("Tarefa adicionada com sucesso!");
+            } else {
+                alert("Preencha todos os campos!");
+            }
+        });
+
+        function excluirTarefa(index) {
+            if (confirm("Tem certeza que deseja excluir esta tarefa?")) {
+                tarefas.splice(index, 1);
+                salvarTarefas();
+                renderTabela();
+            }
+        }
+
+        function editarTarefa(index) {
+            const tarefa = tarefas[index];
+
+            document.getElementById("titulo").value = tarefa.titulo;
+            document.getElementById("descricao").value = tarefa.descricao;
+            document.getElementById("prioridade").value = tarefa.prioridade;
+
+            tarefas.splice(index, 1);
+            salvarTarefas();
+            renderTabela();
+        }
+
+        // Inicializa a tabela ao carregar a página
+        renderTabela();
+    </script>
+</body>
+</html>
